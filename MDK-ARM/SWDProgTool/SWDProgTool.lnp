@@ -44,7 +44,12 @@
 "swdprogtool\usb_device.o"
 "swdprogtool\stm32f4xx_hal_msp.o"
 "swdprogtool\usbd_storage_if.o"
+"swdprogtool\stdio_stm32.o"
+"swdprogtool\sfud_port.o"
+"swdprogtool\sfud_sfdp.o"
+"swdprogtool\sfud.o"
 "swdprogtool\startup_stm32f405xx.o"
+"swdprogtool\retarget_io.o"
 --library_type=microlib --strict --scatter "SWDProgTool\SWDProgTool.sct"
 --diag_suppress=L6329 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
