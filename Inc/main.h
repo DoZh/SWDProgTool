@@ -64,6 +64,8 @@
 #define LED2_GPIO_Port GPIOA
 #define LED3_Pin GPIO_PIN_2
 #define LED3_GPIO_Port GPIOA
+#define Flash_CS_Pin GPIO_PIN_4
+#define Flash_CS_GPIO_Port GPIOA
 #define SW0_Pin GPIO_PIN_2
 #define SW0_GPIO_Port GPIOB
 #define Target_TDI_Pin GPIO_PIN_9

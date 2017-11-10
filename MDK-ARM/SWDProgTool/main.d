@@ -48,3 +48,8 @@ swdprogtool\main.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_def
 swdprogtool\main.o: ../Inc/usbd_conf.h
 swdprogtool\main.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 swdprogtool\main.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+swdprogtool\main.o: ..\Src\sfud\inc\sfud.h
+swdprogtool\main.o: ..\Src\sfud\inc\sfud_def.h
+swdprogtool\main.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+swdprogtool\main.o: ..\Src\sfud\inc\sfud_cfg.h
+swdprogtool\main.o: ..\Src\sfud\inc\sfud_flash_def.h

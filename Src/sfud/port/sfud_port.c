@@ -28,7 +28,10 @@
 
 #include <sfud.h>
 #include <stdarg.h>
+#include "main.h"
+#include "stm32f4xx_hal.h"
 
+extern SPI_HandleTypeDef hspi1;
 
 static char log_buf[256];
 
@@ -41,12 +44,15 @@ static sfud_err spi_write_read(const sfud_spi *spi, const uint8_t *write_buf, si
         size_t read_size) {
     sfud_err result = SFUD_SUCCESS;
     uint8_t send_data, read_data;
-
+		HAL_GPIO_WritePin(Flash_CS_GPIO_Port, Flash_CS_Pin, GPIO_PIN_RESET);
     /**
      * add your spi write and read code
      */
-		
-
+		if (write_size)
+			HAL_SPI_Transmit(&hspi1, (uint8_t *)write_buf, write_size, 100);
+		if (read_size)
+			result = HAL_SPI_Receive(&hspi1, read_buf, read_size, 100);
+		HAL_GPIO_WritePin(Flash_CS_GPIO_Port, Flash_CS_Pin, GPIO_PIN_SET);
     return result;
 }
 
