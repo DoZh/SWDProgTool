@@ -48,3 +48,8 @@ swdprogtool\usbd_storage_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/I
 swdprogtool\usbd_storage_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_core.h
 swdprogtool\usbd_storage_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc/usbd_ctlreq.h
 swdprogtool\usbd_storage_if.o: ../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc/usbd_msc_scsi.h
+swdprogtool\usbd_storage_if.o: ..\Src\sfud\inc\sfud.h
+swdprogtool\usbd_storage_if.o: ..\Src\sfud\inc\sfud_def.h
+swdprogtool\usbd_storage_if.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+swdprogtool\usbd_storage_if.o: ..\Src\sfud\inc\sfud_cfg.h
+swdprogtool\usbd_storage_if.o: ..\Src\sfud\inc\sfud_flash_def.h

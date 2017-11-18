@@ -58,6 +58,7 @@ extern "C" {
 if (!(EXPR))                                                                   \
 {                                                                              \
     SFUD_DEBUG("(%s) has assert failed at %s.", #EXPR, __FUNCTION__);          \
+		SFUD_DEBUG("\n%p\n",EXPR);																														\
     while (1);                                                                 \
 }
 #else

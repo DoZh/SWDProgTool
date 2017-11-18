@@ -68,7 +68,7 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+sfud_flash *hflash1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,7 +125,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	sfud_init();
-
+	hflash1 = sfud_get_device(0);
+	
+	//sfud_erase_write(hflash1, 0, 0x1000, "Hello, World!");
+	//sfud_chip_erase(hflash1);
+	
+	printf("\nErase Block Size is %d\n",hflash1->chip.erase_gran);
 	
   /* USER CODE END 2 */
 

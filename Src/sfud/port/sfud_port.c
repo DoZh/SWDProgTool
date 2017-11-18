@@ -51,9 +51,29 @@ static sfud_err spi_write_read(const sfud_spi *spi, const uint8_t *write_buf, si
 		if (write_size)
 			HAL_SPI_Transmit(&hspi1, (uint8_t *)write_buf, write_size, 100);
 		if (read_size)
-			result = HAL_SPI_Receive(&hspi1, read_buf, read_size, 100);
+			HAL_SPI_Receive(&hspi1, read_buf, read_size, 100);
 		HAL_GPIO_WritePin(Flash_CS_GPIO_Port, Flash_CS_Pin, GPIO_PIN_SET);
     return result;
+}
+
+
+void sfud_delay()
+{
+	for(uint32_t i=0;i < 255; i++)
+	{
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();
+		__nop();		
+		__nop();
+		__nop();		
+		__nop();
+		__nop();
+	}
 }
 
 sfud_err sfud_spi_port_init(sfud_flash *flash) {
@@ -73,6 +93,7 @@ sfud_err sfud_spi_port_init(sfud_flash *flash) {
      *    flash->retry.times = 10000; //Required
      */
 		flash->spi.wr = spi_write_read; //Required
+    flash->retry.delay = sfud_delay;
 		flash->retry.times = 10000; //Required
     return result;
 }

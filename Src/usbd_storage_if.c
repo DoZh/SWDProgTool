@@ -49,6 +49,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_storage_if.h"
 /* USER CODE BEGIN INCLUDE */
+#include "sfud.h"
+#include <string.h>
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -77,6 +79,7 @@
 #define STORAGE_BLK_SIZ                  0x200
 
 /* USER CODE BEGIN PRIVATE_DEFINES */
+extern sfud_flash *hflash1;
 /* USER CODE END PRIVATE_DEFINES */
   
 /**
@@ -244,6 +247,9 @@ int8_t STORAGE_Read_FS (uint8_t lun,
                         uint16_t blk_len)
 {
   /* USER CODE BEGIN 6 */ 
+	//printf("Read: \nblk_addr = %d\nblk_len = %d\n", blk_addr, blk_len);
+
+  sfud_read(hflash1, STORAGE_BLK_SIZ*blk_addr, STORAGE_BLK_SIZ*blk_len, buf);
   return (USBD_OK);
   /* USER CODE END 6 */ 
 }
@@ -261,6 +267,16 @@ int8_t STORAGE_Write_FS (uint8_t lun,
                          uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */ 
+	printf("Write: \nblk_addr = %d\nblk_len = %d\n", blk_addr, blk_len);
+	if(blk_len > 8 || ((blk_addr>>3)!=(blk_len-1+blk_addr)>>3))
+		printf("ERROR!\n");
+	else{
+		uint8_t *flashbuff = malloc(0x1000);
+		sfud_read(hflash1, STORAGE_BLK_SIZ*8*(blk_addr>>3), 0x1000, flashbuff);
+		memcpy(flashbuff + 0x200*(blk_addr%8), buf, 0x200*blk_len);
+		sfud_erase_write(hflash1, STORAGE_BLK_SIZ*8*(blk_addr>>3), 0x1000, flashbuff);
+		free(flashbuff);
+	}
   return (USBD_OK);
   /* USER CODE END 7 */ 
 }
