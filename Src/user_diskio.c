@@ -65,11 +65,18 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
+#include <stdlib.h>
+#include "sfud.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
+#define SECTOR_SIZE     0x200
+#define SECTOR_COUNT    0x10000
+#define BLOCK_SIZE      0x200
 /* Private define ------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+extern sfud_flash *hflash1;
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
 
@@ -112,7 +119,8 @@ DSTATUS USER_initialize (
 )
 {
   /* USER CODE BEGIN INIT */
-    Stat = STA_NOINIT;
+    //Stat = STA_NOINIT;
+		Stat &= ~STA_NOINIT;
     return Stat;
   /* USER CODE END INIT */
 }
@@ -127,7 +135,8 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-    Stat = STA_NOINIT;
+    //Stat = STA_NOINIT;
+		Stat &= ~STA_NOINIT;
     return Stat;
   /* USER CODE END STATUS */
 }
@@ -148,6 +157,7 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
+		sfud_read(hflash1, SECTOR_SIZE*sector, SECTOR_SIZE*count, buff);
     return RES_OK;
   /* USER CODE END READ */
 }
@@ -170,6 +180,11 @@ DRESULT USER_write (
 { 
   /* USER CODE BEGIN WRITE */
   /* USER CODE HERE */
+		uint8_t *flashbuff = malloc(0x1000);
+		sfud_read(hflash1, SECTOR_SIZE*8*(sector>>3), 0x1000, flashbuff);
+		memcpy(flashbuff + 0x200*(sector%8), buff, 0x200*count);
+		sfud_erase_write(hflash1, SECTOR_SIZE*8*(sector>>3), 0x1000, flashbuff);
+		free(flashbuff);
     return RES_OK;
   /* USER CODE END WRITE */
 }
@@ -190,7 +205,32 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-    DRESULT res = RES_ERROR;
+    DRESULT res = RES_OK;
+
+    switch(cmd)
+    {
+      case CTRL_SYNC :
+        break;
+
+      case CTRL_TRIM:
+        break;
+
+      case GET_BLOCK_SIZE:
+        *(DWORD*)buff = BLOCK_SIZE;
+        break;
+
+      case GET_SECTOR_SIZE:
+        *(DWORD*)buff = SECTOR_SIZE;
+        break;
+
+      case GET_SECTOR_COUNT:
+        *(DWORD*)buff = SECTOR_COUNT;
+        break;
+
+      default:
+        res = RES_PARERR;
+        break;
+    }
     return res;
   /* USER CODE END IOCTL */
 }

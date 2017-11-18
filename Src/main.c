@@ -132,6 +132,68 @@ int main(void)
 	
 	printf("\nErase Block Size is %d\n",hflash1->chip.erase_gran);
 	
+	FATFS *fs = &USERFatFS;
+	FRESULT res;
+	DWORD fre_clust;	
+	FIL fwfile;
+	FILINFO fwfileinfo;
+	DIR dir;
+	char fwfilepath[16];
+	UINT fwReadByte;
+	
+	res = f_mount(fs, USERPath, 1);
+  if (res != FR_OK)
+  {
+    printf("FAILED: %d\n",res);
+	}
+  else
+		printf("MOUNT OK\n");
+
+	res = f_getfree(USERPath,&fre_clust,&fs);         /* Get Number of Free Clusters */
+	if (res == FR_OK) 
+	{
+	                                             /* Print free space in unit of MB (assuming 512 bytes/sector) */
+        printf("%.1f KB Total Drive Space.\n"
+               "%.1f KB Available Space.\n",
+               ((fs->n_fatent-2)*fs->csize)/2.0,(fre_clust*fs->csize)/2.0);
+	}
+	else
+	{
+		printf("get disk info error\n");
+		printf("error code: %d\n",res);
+	}
+
+	res = f_opendir(&dir, "/");                       /* Open the directory */
+	if (res == FR_OK) {
+		for (;;) {
+				res = f_readdir(&dir, &fwfileinfo);                   /* Read a directory item */
+				if (res != FR_OK || fwfileinfo.fname[0] == 0) 
+					break;  /* Break on error or end of dir */
+				if (fwfileinfo.fattrib & AM_DIR) {                    /* It is a directory */
+					
+				} else {                                       /* It is a file. */
+						printf("%s%s  %lu Bytes\n", USERPath, fwfileinfo.fname, fwfileinfo.fsize);
+						if(strstr(fwfileinfo.fname, ".BIN") != NULL)
+							break;
+				}
+			}
+			res = f_open(&fwfile, fwfileinfo.fname, FA_READ);
+
+		} else {
+			printf("open path ERROR\n");
+		}
+		
+		uint8_t cache[128];
+		do{
+		res = f_read(&fwfile, cache, 128, &fwReadByte);
+		printf("res = %d fwReadByte = %d\n", res, fwReadByte);
+		}while(fwReadByte != 0);
+		for(int i=0; i<128; i++)
+			printf("%02x ", cache[i]);
+	
+	
+	f_close(&fwfile);
+	f_closedir(&dir);
   /* USER CODE END 2 */
 
   /* Infinite loop */
