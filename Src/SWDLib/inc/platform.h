@@ -54,45 +54,52 @@
  */
 
 /* Hardware definitions... */
-#define JTAG_PORT 	GPIOC
-#define TDI_PORT	JTAG_PORT
-#define TMS_PORT	JTAG_PORT
-#define TCK_PORT	JTAG_PORT
-#define TDO_PORT	GPIOC
-#define TDI_PIN		GPIO_PIN_2
-#define TMS_PIN		GPIO_PIN_4
-#define TCK_PIN		GPIO_PIN_5
-#define TDO_PIN		GPIO_PIN_6
+#define JTAG_PORT 	Target_SWDCLK_GPIO_Port
+#define TDI_PORT	Target_TDI_GPIO_Port
+#define TMS_PORT	Target_SWDIO_GPIO_Port
+#define TCK_PORT	Target_SWDCLK_GPIO_Port
+#define TDO_PORT	Target_TDO_GPIO_Port
+#define TDI_PIN		Target_TDI_Pin
+#define TMS_PIN		Target_SWDIO_Pin
+#define TCK_PIN		Target_SWDCLK_Pin
+#define TDO_PIN		Target_TDO_Pin
 
-#define SWDIO_PORT 	GPIOB
-#define SWCLK_PORT 	GPIOB
-#define SWDIO_PIN	GPIO_PIN_4
-#define SWCLK_PIN	GPIO_PIN_5
+#define SWDIO_PORT 	TMS_PORT
+#define SWCLK_PORT 	TCK_PORT
+#define SWDIO_PIN	TMS_PIN
+#define SWCLK_PIN	TCK_PIN
+
+#define SWDIO_DIR_PORT Target_DIR_GPIO_Port
+#define SWDIO_DIR_PIN Target_DIR_Pin
 
 #define TRST_PORT	GPIOC
 #define TRST_PIN	GPIO_PIN_1
 #define SRST_PORT	GPIOC
 #define SRST_PIN	GPIO_PIN_8
 
-#define LED_PORT	GPIOD
-#define LED_PORT_UART	GPIOD
-#define LED_UART	GPIO_PIN_12
-#define LED_IDLE_RUN	GPIO_PIN_13
-#define LED_ERROR	GPIO_PIN_14
-#define LED_BOOTLOADER	GPIO_PIN_15
+#define LED_PORT	LED1_GPIO_Port
+#define LED_PORT_UART	LED0_GPIO_Port
+#define LED_UART	LED0_Pin
+#define LED_IDLE_RUN	LED1_Pin
+#define LED_ERROR	LED2_Pin
+#define LED_BOOTLOADER	LED3_Pin
 #define BOOTMAGIC0 0xb007da7a
 #define BOOTMAGIC1 0xbaadfeed
 
 #define TMS_SET_MODE() \
 	gpio_mode_setup(TMS_PORT, GPIO_MODE_OUTPUT_PP, \
 	                GPIO_PULLDOWN, TMS_PIN);
-#define SWDIO_MODE_FLOAT() \
+#define SWDIO_MODE_FLOAT() do{ \
 	gpio_mode_setup(SWDIO_PORT, GPIO_MODE_INPUT, \
-	                GPIO_PULLUP, SWDIO_PIN);
+	                GPIO_PULLUP, SWDIO_PIN); \
+	gpio_clear(SWDIO_DIR_PORT, SWDIO_DIR_PIN); \
+} while(0)
 
-#define SWDIO_MODE_DRIVE() \
+#define SWDIO_MODE_DRIVE() do{ \
+	gpio_set(SWDIO_DIR_PORT, SWDIO_DIR_PIN); \
 	gpio_mode_setup(SWDIO_PORT, GPIO_MODE_OUTPUT_PP, \
-	                GPIO_PULLUP, SWDIO_PIN);
+	                GPIO_PULLUP, SWDIO_PIN); \
+} while(0)
 
 
 #define USB_DRIVER      stm32f107_usb_driver

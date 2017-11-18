@@ -335,7 +335,7 @@
               <MiscControls>--C99</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F405xx</Define>
               <Undefine />
-              <IncludePath>../Inc;        ../Drivers/STM32F4xx_HAL_Driver/Inc;        ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;        ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;        ../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc;        ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;        ../Middlewares/Third_Party/FatFs/src;        ../Drivers/CMSIS/Include;        ..\Src\sfud\inc</IncludePath>
+              <IncludePath>../Inc; ../Drivers/STM32F4xx_HAL_Driver/Inc; ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy; ../Middlewares/ST/STM32_USB_Device_Library/Core/Inc; ../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc; ../Drivers/CMSIS/Device/ST/STM32F4xx/Include; ../Middlewares/Third_Party/FatFs/src; ../Drivers/CMSIS/Include; ..\Src\sfud\inc; ..\Src\SWDLib\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -643,6 +643,81 @@
               <FileName>sfud.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\sfud\src\sfud.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio_stm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\platform\gpio_stm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>platform_stm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\platform\platform_stm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>timing_stm32.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\platform\timing_stm32.c</FilePath>
+            </File>
+            <File>
+              <FileName>adiv5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\adiv5.c</FilePath>
+            </File>
+            <File>
+              <FileName>adiv5_swdp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\adiv5_swdp.c</FilePath>
+            </File>
+            <File>
+              <FileName>command.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\command.c</FilePath>
+            </File>
+            <File>
+              <FileName>cortexm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\cortexm.c</FilePath>
+            </File>
+            <File>
+              <FileName>exception.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\exception.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\stm32f1.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\stm32f4.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32l0.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\stm32l0.c</FilePath>
+            </File>
+            <File>
+              <FileName>swdptap.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\swdptap.c</FilePath>
+            </File>
+            <File>
+              <FileName>swdptap_generic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\swdptap_generic.c</FilePath>
+            </File>
+            <File>
+              <FileName>target.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\target.c</FilePath>
+            </File>
+            <File>
+              <FileName>timing.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\SWDLib\src\timing.c</FilePath>
             </File>
           </Files>
         </Group>

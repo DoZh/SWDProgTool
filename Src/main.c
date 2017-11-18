@@ -53,6 +53,9 @@
 
 /* USER CODE BEGIN Includes */
 #include "sfud.h"
+#include "command.h"
+#include "target_internal.h"
+#include "cortexm.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -172,8 +175,8 @@ int main(void)
 				if (fwfileinfo.fattrib & AM_DIR) {                    /* It is a directory */
 					
 				} else {                                       /* It is a file. */
-						printf("%s%s  %lu Bytes\n", USERPath, fwfileinfo.fname, fwfileinfo.fsize);
-						if(strstr(fwfileinfo.fname, ".BIN") != NULL)
+						printf("%s%s  %lu Bytes\n", USERPath, fwfileinfo.fname, fwfileinfo.fsize); 
+						if(strstr(fwfileinfo.fname, ".BIN") != NULL) /* Find .BIN File */
 							break;
 				}
 			}
@@ -183,13 +186,15 @@ int main(void)
 			printf("open path ERROR\n");
 		}
 		
+		/* Read Test */
 		uint8_t cache[128];
-		do{
+		do{ 
 		res = f_read(&fwfile, cache, 128, &fwReadByte);
 		printf("res = %d fwReadByte = %d\n", res, fwReadByte);
 		}while(fwReadByte != 0);
 		for(int i=0; i<128; i++)
 			printf("%02x ", cache[i]);
+	cmd_swdp_scan();
 	
 	
 	f_close(&fwfile);
@@ -204,22 +209,22 @@ int main(void)
 
   /* USER CODE BEGIN 3 */
 	
-		HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
-		HAL_Delay(500);
-		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
-		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+//		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+//		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);
+//		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+//		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
+//		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+//		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+//		HAL_Delay(500);
+//		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+//		HAL_Delay(500);
   }
   /* USER CODE END 3 */
 
@@ -412,7 +417,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(Flash_CS_GPIO_Port, Flash_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, Target_DIR_Pin|Target_SWDIO_Pin|Target_SWDCLK_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Target_DIR_GPIO_Port, Target_DIR_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, Target_SWDIO_Pin|Target_SWDCLK_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED0_Pin */
   GPIO_InitStruct.Pin = LED0_Pin;
@@ -449,19 +457,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SW1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Target_DIR_Pin */
-  GPIO_InitStruct.Pin = Target_DIR_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Target_DIR_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : Target_SWDIO_Pin */
-  GPIO_InitStruct.Pin = Target_SWDIO_Pin;
+  /*Configure GPIO pins : Target_DIR_Pin Target_SWDIO_Pin */
+  GPIO_InitStruct.Pin = Target_DIR_Pin|Target_SWDIO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Target_SWDIO_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Target_SWDCLK_Pin */
   GPIO_InitStruct.Pin = Target_SWDCLK_Pin;
