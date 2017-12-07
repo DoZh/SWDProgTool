@@ -194,8 +194,66 @@ int main(void)
 		}while(fwReadByte != 0);
 		for(int i=0; i<128; i++)
 			printf("%02x ", cache[i]);
+	
+	HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
+		
+	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
+		
 	cmd_swdp_scan();
 	
+	if(target_list != NULL && fwfileinfo.fname[0] != 0)
+	{
+		cortexm_halt_request(target_list);
+		cortexm_halt_on_reset_request(target_list);
+		cortexm_reset(target_list);
+		
+		f_lseek(&fwfile, 0);
+		uint8_t *fwbuff = malloc(0x800);
+		uint8_t *fwVerifyBuff = malloc(0x800);
+		uint8_t chkres;
+		target_flash_erase(target_list,0x08000000, (fwfileinfo.fsize + 0x7FF) & ~0x7FF);
+		uint32_t targetWriteOffset = 0;
+		for(;;)
+		{
+			f_read(&fwfile, fwbuff, 0x800, &fwReadByte);
+			if(fwReadByte == 0) 
+				break;
+			if((fwReadByte & 0x03) !=0)
+			{
+				uint32_t AlignedByte = ((fwReadByte + 0x03) & ~0x03);
+				for(;fwReadByte < AlignedByte;fwReadByte++)
+					fwbuff[fwReadByte] = 0xFF;
+			}
+			target_flash_write(target_list,0x08000000 + targetWriteOffset, (const void *)fwbuff, fwReadByte);
+			
+			target_mem_read(target_list, (void *)fwVerifyBuff, 0x08000000 + targetWriteOffset, fwReadByte);
+			chkres = strncmp(fwbuff, fwVerifyBuff, fwReadByte); 
+			if(chkres != 0)
+				break;
+			targetWriteOffset += fwReadByte;
+		}
+		free(fwbuff);
+		free(fwVerifyBuff);
+		
+		cortexm_halt_on_reset_clear(target_list);
+		cortexm_reset(target_list);
+		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+		if(chkres == 0)
+		{
+			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
+			printf("Program target device Complete!\n");
+		} else {
+			HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+			printf("Traget Device Verify ERROR.\n");
+			}
+	} else {
+		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+		printf("Connect to target Fail, or can't find bin file.\n");
+	}
 	
 	f_close(&fwfile);
 	f_closedir(&dir);
