@@ -85,7 +85,8 @@ static void MX_CRC_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+uint8_t prog_stm32_use_fatfs(uint32_t onceProgSize);
+uint8_t gen_bin_file(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -122,7 +123,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_RTC_Init();
   MX_CRC_Init();
-  MX_USB_DEVICE_Init();
+  //MX_USB_DEVICE_Init();
   MX_FATFS_Init();
 
   /* USER CODE BEGIN 2 */
@@ -135,128 +136,38 @@ int main(void)
 	
 	printf("\nErase Block Size is %d\n",hflash1->chip.erase_gran);
 	
-	FATFS *fs = &USERFatFS;
-	FRESULT res;
-	DWORD fre_clust;	
-	FIL fwfile;
-	FILINFO fwfileinfo;
-	DIR dir;
-	char fwfilepath[16];
-	UINT fwReadByte;
-	
-	res = f_mount(fs, USERPath, 1);
-  if (res != FR_OK)
-  {
-    printf("FAILED: %d\n",res);
-	}
-  else
-		printf("MOUNT OK\n");
-
-	res = f_getfree(USERPath,&fre_clust,&fs);         /* Get Number of Free Clusters */
-	if (res == FR_OK) 
-	{
-	                                             /* Print free space in unit of MB (assuming 512 bytes/sector) */
-        printf("%.1f KB Total Drive Space.\n"
-               "%.1f KB Available Space.\n",
-               ((fs->n_fatent-2)*fs->csize)/2.0,(fre_clust*fs->csize)/2.0);
-	}
-	else
-	{
-		printf("get disk info error\n");
-		printf("error code: %d\n",res);
-	}
-
-	res = f_opendir(&dir, "/");                       /* Open the directory */
-	if (res == FR_OK) {
-		for (;;) {
-				res = f_readdir(&dir, &fwfileinfo);                   /* Read a directory item */
-				if (res != FR_OK || fwfileinfo.fname[0] == 0) 
-					break;  /* Break on error or end of dir */
-				if (fwfileinfo.fattrib & AM_DIR) {                    /* It is a directory */
-					
-				} else {                                       /* It is a file. */
-						printf("%s%s  %lu Bytes\n", USERPath, fwfileinfo.fname, fwfileinfo.fsize); 
-						if(strstr(fwfileinfo.fname, ".BIN") != NULL) /* Find .BIN File */
-							break;
-				}
-			}
-			res = f_open(&fwfile, fwfileinfo.fname, FA_READ);
-
-		} else {
-			printf("open path ERROR\n");
-		}
-		
-		/* Read Test */
-		uint8_t cache[128];
-		do{ 
-		res = f_read(&fwfile, cache, 128, &fwReadByte);
-		printf("res = %d fwReadByte = %d\n", res, fwReadByte);
-		}while(fwReadByte != 0);
-		for(int i=0; i<128; i++)
-			printf("%02x ", cache[i]);
-	
 	HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);
 	HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 		
 	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET);
-		
-	cmd_swdp_scan();
 	
-	if(target_list != NULL && fwfileinfo.fname[0] != 0)
-	{
-		cortexm_halt_request(target_list);
-		cortexm_halt_on_reset_request(target_list);
-		cortexm_reset(target_list);
-		
-		f_lseek(&fwfile, 0);
-		uint8_t *fwbuff = malloc(0x800);
-		uint8_t *fwVerifyBuff = malloc(0x800);
-		uint8_t chkres;
-		target_flash_erase(target_list,0x08000000, (fwfileinfo.fsize + 0x7FF) & ~0x7FF);
-		uint32_t targetWriteOffset = 0;
-		for(;;)
-		{
-			f_read(&fwfile, fwbuff, 0x800, &fwReadByte);
-			if(fwReadByte == 0) 
-				break;
-			if((fwReadByte & 0x03) !=0)
-			{
-				uint32_t AlignedByte = ((fwReadByte + 0x03) & ~0x03);
-				for(;fwReadByte < AlignedByte;fwReadByte++)
-					fwbuff[fwReadByte] = 0xFF;
-			}
-			target_flash_write(target_list,0x08000000 + targetWriteOffset, (const void *)fwbuff, fwReadByte);
-			
-			target_mem_read(target_list, (void *)fwVerifyBuff, 0x08000000 + targetWriteOffset, fwReadByte);
-			chkres = strncmp(fwbuff, fwVerifyBuff, fwReadByte); 
-			if(chkres != 0)
-				break;
-			targetWriteOffset += fwReadByte;
-		}
-		free(fwbuff);
-		free(fwVerifyBuff);
-		
-		cortexm_halt_on_reset_clear(target_list);
-		cortexm_reset(target_list);
-		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-		if(chkres == 0)
-		{
+	uint8_t progStatus = prog_stm32_use_fatfs(0x800);
+	
+	//gen_bin_file();
+	
+	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
+	
+	switch (progStatus){
+		case 0:
 			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET);
-			printf("Program target device Complete!\n");
-		} else {
+			break;
+		case 1:
 			HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
-			printf("Traget Device Verify ERROR.\n");
-			}
-	} else {
-		HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
-		printf("Connect to target Fail, or can't find bin file.\n");
+			break;
+		case 2:
+			HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+			break;
+		case 3:
+			HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, GPIO_PIN_SET);
+			gen_bin_file();
+			break;
+		default:
+			break;
 	}
 	
-	f_close(&fwfile);
-	f_closedir(&dir);
+	MX_USB_DEVICE_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -283,7 +194,10 @@ int main(void)
 //		HAL_Delay(500);
 //		HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET);
 //		HAL_Delay(500);
+		
+	
   }
+
   /* USER CODE END 3 */
 
 }
@@ -532,6 +446,202 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+uint8_t prog_stm32_use_fatfs(uint32_t onceProgSize)
+{
+	
+	FATFS *fs = &USERFatFS;
+	FRESULT res;
+	DWORD fre_clust;	
+	FIL fwfile;
+	FILINFO fwfileinfo;
+	DIR dir;
+	char fwfilepath[16];
+	UINT fwReadByte;
+	
+	uint8_t returnvalue = 0;
+	
+	res = f_mount(fs, USERPath, 1);
+  if (res != FR_OK)
+  {
+    printf("FAILED: %d\n",res);
+	}
+  else
+		printf("MOUNT OK\n");
+
+	res = f_getfree(USERPath,&fre_clust,&fs);         /* Get Number of Free Clusters */
+	if (res == FR_OK) 
+	{
+	                                             /* Print free space in unit of MB (assuming 512 bytes/sector) */
+        printf("%.1f KB Total Drive Space.\n"
+               "%.1f KB Available Space.\n",
+               ((fs->n_fatent-2)*fs->csize)/2.0,(fre_clust*fs->csize)/2.0);
+	}
+	else
+	{
+		printf("get disk info error\n");
+		printf("error code: %d\n",res);
+	}
+
+	res = f_opendir(&dir, "/");                       /* Open the directory */
+	if (res == FR_OK) {
+		for (;;) {
+				res = f_readdir(&dir, &fwfileinfo);                   /* Read a directory item */
+				if (res != FR_OK || fwfileinfo.fname[0] == 0) {
+					printf(".BIN File Not Found\n");
+					break;  /* Break on error or end of dir */
+				}
+				if (fwfileinfo.fattrib & AM_DIR) {                    /* It is a directory */
+					
+				} else {                                       /* It is a file. */
+						printf("%s%s  %lu Bytes\n", USERPath, fwfileinfo.fname, fwfileinfo.fsize); 
+						if(strstr(fwfileinfo.fname, ".BIN") != NULL) /* Find .BIN File */
+							break;
+				}
+			}
+			res = f_open(&fwfile, fwfileinfo.fname, FA_READ);
+
+		} else {
+			printf("open path ERROR\n");
+		}
+	
+	printf("Start program target device.\n");
+		
+	cmd_swdp_scan();
+	
+	if(fwfileinfo.fname[0] != 0)
+	{
+		if(target_list != NULL)
+		{
+			cortexm_halt_request(target_list);
+			cortexm_halt_on_reset_request(target_list);
+			cortexm_reset(target_list);
+			
+			f_lseek(&fwfile, 0);
+			uint8_t *fwbuff = malloc(onceProgSize);
+			uint8_t *fwVerifyBuff = malloc(onceProgSize);
+			uint8_t chkres;
+			target_flash_erase(target_list,0x08000000, (fwfileinfo.fsize + 0x7FF) & ~0x7FF);
+			uint32_t targetWriteOffset = 0;
+			for(;;)
+			{
+				f_read(&fwfile, fwbuff, onceProgSize, &fwReadByte);
+				if(fwReadByte == 0) 
+					break;
+				if((fwReadByte & 0x03) !=0)
+				{
+					uint32_t AlignedByte = ((fwReadByte + 0x03) & ~0x03);
+					for(;fwReadByte < AlignedByte;fwReadByte++)
+						fwbuff[fwReadByte] = 0xFF;
+				}
+				target_flash_write(target_list,0x08000000 + targetWriteOffset, (const void *)fwbuff, fwReadByte);
+				
+				target_mem_read(target_list, (void *)fwVerifyBuff, 0x08000000 + targetWriteOffset, fwReadByte);
+				chkres = strncmp(fwbuff, fwVerifyBuff, fwReadByte); 
+				if(chkres != 0)
+					break;
+				targetWriteOffset += fwReadByte;
+			}
+			free(fwbuff);
+			free(fwVerifyBuff);
+			
+			cortexm_halt_on_reset_clear(target_list);
+			cortexm_reset(target_list);
+			if(chkres == 0)
+			{
+				printf("Program target device Complete!\n");
+				returnvalue = 0;
+			} else {
+				printf("Traget Device Verify ERROR.\n");
+				returnvalue = 1;
+				}
+		} else {
+		printf("Connect to target Fail.\n");
+		returnvalue = 2;	
+		}
+	}	else {
+		printf("Can't find bin file.\n");
+		returnvalue = 3;	
+	}
+	f_close(&fwfile);
+	f_closedir(&dir);
+	return returnvalue;
+}
+
+uint8_t gen_bin_file(void){
+	FATFS *fs = &USERFatFS;
+	FRESULT res;
+	DWORD fre_clust;	
+	FIL fwfile;
+	FIL fwbinfile;
+	FILINFO fwfileinfo;
+	DIR dir;
+	char fwfilepath[16];
+	UINT fwReadByte;
+	
+	uint8_t returnvalue = 0;
+	
+	res = f_mount(fs, USERPath, 1);
+
+	res = f_opendir(&dir, "/");                       /* Open the directory */
+	for (;;) {
+		res = f_readdir(&dir, &fwfileinfo);                   /* Read a directory item */
+		if (res != FR_OK || fwfileinfo.fname[0] == 0) {
+			printf(".HEX File Not Found\n");
+			break;  /* Break on error or end of dir */
+		}
+		if (fwfileinfo.fattrib & AM_DIR) {                    /* It is a directory */
+			
+		} else {                                       /* It is a file. */
+				printf("%s%s  %lu Bytes\n", USERPath, fwfileinfo.fname, fwfileinfo.fsize); 
+				if(strstr(fwfileinfo.fname, ".HEX") != NULL) /* Find .HEX File */
+					break;
+		}
+	}
+	if(fwfileinfo.fname[0] != 0)
+		{
+		f_open(&fwfile, fwfileinfo.fname, FA_READ);
+		f_open(&fwbinfile, "TAR.BIN", FA_CREATE_ALWAYS | FA_WRITE);
+		
+		char buf[64];
+		char fir[4]="   \n";
+		char len, flag;
+		
+		while(f_gets(buf,64,&fwfile) != NULL)
+		{
+			len = strlen(buf);
+			if (len < 21)
+			{
+				continue;
+			}
+			buf[len-1] = '\0';	
+			for (int i = 9; i < len-3; i+=2)
+			{
+
+				fir[0] = buf[i];
+				fir[1] = buf[i+1];
+				
+				sscanf(fir,"%x",&flag);
+				
+				unsigned int writebyte;
+				f_write (&fwbinfile,	(const void *)&flag,	1, &writebyte);
+				
+				//f_putc( (const char)flag, &fwbinfile); //use f_write inside of f_putc to avoid LF->CRLF conv.
+				
+
+			}
+			//f_printf(&fwbinfile, "%016b", 0x550F);       /* "0101010100001111" */
+			
+			printf("%s %d \n",buf,len - 1);
+		}
+		
+		f_close(&fwfile);
+		f_close(&fwbinfile);
+	}
+	f_closedir(&dir);
+	
+}
+
 
 /* USER CODE END 4 */
 
